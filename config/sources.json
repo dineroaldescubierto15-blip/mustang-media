@@ -1,0 +1,9 @@
+{
+  "hashtags": ["fordmustang", "mustanggt", "shelby", "mustangnation", "s650"],
+  "creators": [],
+  "posts_per_day": 2,
+  "candidates_per_day": 4,
+  "publish_times": ["12:00", "19:00"],
+  "timezone": "America/New_York",
+  "min_days_between_same_author": 14
+}
