@@ -40,7 +40,7 @@ the follow/tag call to action, and the hashtags. Never remove the credit or clai
 Every candidate needs Pol's approval before it is published. No exceptions.
 
 - `scripts/telegram_send.py` sends each candidate (video/photo + stats + caption) with ✅/❌ buttons.
-- `.github/workflows/bot.yml` runs every 10 min: `telegram_poll.py` records the answers in the
+- `.github/workflows/bot.yml` runs every 5 min: `telegram_poll.py` records the answers in the
   candidate file (`status`: pending → approved/rejected) and learns the chat id from `/start`;
   `publish.py`, at each `publish_times` slot (America/New_York, up to 90 min late), sends the oldest
   approved candidate to the Make webhook (`MAKE_WEBHOOK_URL`), which publishes it with the official
@@ -52,3 +52,12 @@ Every candidate needs Pol's approval before it is published. No exceptions.
 
 Apify charges per result (≈ $1.90 per 1,000 for the hashtag scraper). Defaults (3 hashtags × 20 reels a day)
 stay under the free monthly credit; raise `hashtags_per_day` or `results_per_hashtag` with care.
+
+## Telegram details
+
+- Each candidate = media message (stats + status, ✅/❌ buttons) + a reply with the caption draft.
+- After a decision the buttons are removed and the status is written on the message (final).
+- A pinned message keeps the queue: approved (publish order) and pending, split into Reels and Posts.
+  `/cua` in the chat re-sends and re-pins it.
+- Relevance: the whole Mustang family counts (Shelby, GT350, GT500, Mach 1, Bullitt…); trucks and the
+  classic Shelby Cobra are excluded unless a strong Mustang keyword appears (`config/sources.json`).

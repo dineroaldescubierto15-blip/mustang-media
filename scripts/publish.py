@@ -10,8 +10,8 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from common import (CANDIDATES_DIR, CONFIG_FILE, HISTORY_FILE, STATE_FILE, Telegram, load_json, now_utc,
-                    raw_url, save_json)
+from common import (CANDIDATES_DIR, CONFIG_FILE, HISTORY_FILE, STATE_FILE, Telegram, load_json, mark_message,
+                    now_utc, raw_url, save_json, title, update_pinned)
 
 LATE_WINDOW = dt.timedelta(minutes=90)
 MAX_QUEUE_AGE = dt.timedelta(days=4)
@@ -86,7 +86,7 @@ def main() -> None:
         ok, detail = False, str(e)
 
     if not ok:
-        notify(f"⚠️ No s'ha pogut publicar el post de @{c['author']}. Continua aprovat i es tornarà a provar a la "
+        notify(f"⚠️ No s'ha pogut publicar: {title(c)}. Continua aprovat i es tornarà a provar a la "
                f"propera franja.\nDetall: {detail}")
         return
 
@@ -97,8 +97,12 @@ def main() -> None:
     history["published"].append({"shortCode": code, "author": c["author"], "published_at": c["published_at"],
                                  "original_url": c["original_url"]})
     save_json(HISTORY_FILE, history)
-    notify(f"📣 Publicat el post de @{c['author']} a @{config['account']}.\n"
-           f"https://www.instagram.com/{config['account']}/")
+    notify(f"📣 Publicat: {title(c)}\nhttps://www.instagram.com/{config['account']}/\n\n"
+           f"📝 Descripció publicada:\n{c['caption']}")
+    if tg:
+        mark_message(tg, state["chat_id"], c)
+        update_pinned(tg, state, config)
+        save_json(STATE_FILE, state)
 
 
 if __name__ == "__main__":

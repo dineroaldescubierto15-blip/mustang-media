@@ -2,7 +2,7 @@ name: Aprovacions i publicació
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # cada 10 minuts: llegeix els ✅/❌ i publica si toca
+    - cron: "*/5 * * * *"    # cada 5 minuts: llegeix els ✅/❌ i publica si toca
   workflow_dispatch: {}
 
 permissions:

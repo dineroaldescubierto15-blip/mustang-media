@@ -94,12 +94,17 @@ def main() -> None:
     max_age = dt.timedelta(days=config.get("max_age_days", 7))
     min_age = dt.timedelta(hours=config.get("min_age_hours", 0))
     keywords = [k.lower() for k in config.get("required_keywords", [])]
+    strong = [k.lower() for k in config.get("strong_keywords", [])]
+    excluded_words = [k.lower() for k in config.get("excluded_keywords", [])]
 
     def is_relevant(post: dict) -> bool:
-        if not keywords:
-            return True
+        """Família Mustang (inclosos Shelby, GT350, GT500…), sense pickups ni el Shelby Cobra clàssic."""
         text = " ".join([post.get("caption") or "", " ".join(post.get("hashtags") or [])]).lower()
-        return any(k in text for k in keywords)
+        if keywords and not any(k in text for k in keywords):
+            return False
+        if any(k in text for k in excluded_words) and not any(k in text for k in strong):
+            return False
+        return True
 
     scored, unique = [], {}
     for p in posts:
