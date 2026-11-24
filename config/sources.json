@@ -1,6 +1,12 @@
 {
+  "account": "mustangemotion",
   "hashtags": ["fordmustang", "mustanggt", "shelby", "mustangnation", "s650"],
-  "creators": [],
+  "hashtags_per_day": 3,
+  "results_per_hashtag": 20,
+  "content_types": ["reels"],
+  "max_age_days": 7,
+  "caption_hashtags": ["fordmustang", "mustang", "mustanggt", "shelby", "musclecar", "mustangemotion"],
+  "excluded_authors": [],
   "posts_per_day": 2,
   "candidates_per_day": 4,
   "publish_times": ["12:00", "19:00"],
