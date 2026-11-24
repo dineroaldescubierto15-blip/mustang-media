@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""Si és hora de publicar (franges de config, hora de Nova York), envia a Make el candidat aprovat més antic.
+
+Make publica a Instagram i respon amb l'ID del post. Cada franja només es processa un cop al dia,
+encara que GitHub Actions s'endarrereixi (es publica fins a 90 minuts després de l'hora prevista).
+"""
+import datetime as dt
+import os
+from zoneinfo import ZoneInfo
+
+import requests
+
+from common import (CANDIDATES_DIR, CONFIG_FILE, HISTORY_FILE, STATE_FILE, Telegram, load_json, now_utc,
+                    raw_url, save_json)
+
+LATE_WINDOW = dt.timedelta(minutes=90)
+MAX_QUEUE_AGE = dt.timedelta(days=4)
+
+
+def due_slot(config: dict, state: dict) -> str | None:
+    tz = ZoneInfo(config.get("timezone", "America/New_York"))
+    local = now_utc().astimezone(tz)
+    done = state.get("slots_done", [])
+    for hhmm in config["publish_times"]:
+        h, m = map(int, hhmm.split(":"))
+        target = local.replace(hour=h, minute=m, second=0, microsecond=0)
+        key = f"{local.date()} {hhmm}"
+        if target <= local < target + LATE_WINDOW and key not in done:
+            return key
+    return None
+
+
+def next_approved():
+    best = None
+    for path in sorted(CANDIDATES_DIR.glob("*.json")):
+        data = load_json(path, {"candidates": []})
+        for c in data["candidates"]:
+            if c.get("status") != "approved":
+                continue
+            decided = dt.datetime.fromisoformat(c.get("decided_at", now_utc().isoformat()))
+            if now_utc() - decided > MAX_QUEUE_AGE:
+                continue
+            if best is None or decided < best[2]:
+                best = (path, c["shortCode"], decided)
+    return best
+
+
+def main() -> None:
+    config, state = load_json(CONFIG_FILE, {}), load_json(STATE_FILE, {})
+    slot = due_slot(config, state)
+    if not slot:
+        print("No és hora de publicar")
+        return
+
+    token, webhook = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("MAKE_WEBHOOK_URL")
+    tg = Telegram(token) if token and state.get("chat_id") else None
+
+    def notify(text: str) -> None:
+        if tg:
+            tg.call("sendMessage", chat_id=state["chat_id"], text=text, disable_web_page_preview=True)
+
+    if not webhook:
+        print("Encara no hi ha MAKE_WEBHOOK_URL; no es publica")
+        return
+
+    state.setdefault("slots_done", []).append(slot)
+    state["slots_done"] = state["slots_done"][-20:]
+    save_json(STATE_FILE, state)
+
+    pick = next_approved()
+    if not pick:
+        notify(f"🚫 Franja {slot.split()[1]} (Nova York): no s'ha publicat res perquè no hi havia cap candidat aprovat.")
+        return
+
+    path, code, _ = pick
+    data = load_json(path, {"candidates": []})
+    c = next(x for x in data["candidates"] if x["shortCode"] == code)
+    payload = {"media_type": c["media_type"], "media_url": raw_url(c["media_path"]),
+               "caption": c["caption"], "author": c["author"], "shortCode": code}
+    try:
+        r = requests.post(webhook, json=payload, timeout=300)
+        # "Accepted" = Make ha rebut la petició però la pujada a Instagram encara s'està processant
+        ok = r.status_code == 200 and ('"ok"' in r.text or r.text.strip() == "Accepted")
+        detail = r.text[:200]
+    except requests.RequestException as e:
+        ok, detail = False, str(e)
+
+    if not ok:
+        notify(f"⚠️ No s'ha pogut publicar el post de @{c['author']}. Continua aprovat i es tornarà a provar a la "
+               f"propera franja.\nDetall: {detail}")
+        return
+
+    c["status"] = "published"
+    c["published_at"] = now_utc().isoformat()
+    save_json(path, data)
+    history = load_json(HISTORY_FILE, {"published": []})
+    history["published"].append({"shortCode": code, "author": c["author"], "published_at": c["published_at"],
+                                 "original_url": c["original_url"]})
+    save_json(HISTORY_FILE, history)
+    notify(f"📣 Publicat el post de @{c['author']} a @{config['account']}.\n"
+           f"https://www.instagram.com/{config['account']}/")
+
+
+if __name__ == "__main__":
+    main()

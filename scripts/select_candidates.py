@@ -81,6 +81,9 @@ def main() -> None:
     now = dt.datetime.now(UTC)
 
     seen_codes = {h.get("shortCode") for h in history}
+    for f in Path(args.output).parent.glob("*.json"):  # no tornar a proposar candidats d'altres dies
+        if f.resolve() != Path(args.output).resolve():
+            seen_codes |= {c.get("shortCode") for c in json.loads(f.read_text()).get("candidates", [])}
     recent_authors = {
         h.get("author", "").lower()
         for h in history

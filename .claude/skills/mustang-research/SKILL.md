@@ -35,10 +35,18 @@ Every caption starts with `🎥 @author` (credit is mandatory). When reviewing c
 rewrite the `caption` field in English for a US audience: one short hook about the car, the credit line,
 the follow/tag call to action, and the hashtags. Never remove the credit or claim the content as ours.
 
-## Approval
+## Approval and publishing
 
-Every candidate needs Pol's approval (Telegram ✅/❌) before Make publishes it at the `publish_times`
-(America/New_York). Published posts are appended to `data/history.json`.
+Every candidate needs Pol's approval before it is published. No exceptions.
+
+- `scripts/telegram_send.py` sends each candidate (video/photo + stats + caption) with ✅/❌ buttons.
+- `.github/workflows/bot.yml` runs every 10 min: `telegram_poll.py` records the answers in the
+  candidate file (`status`: pending → approved/rejected) and learns the chat id from `/start`;
+  `publish.py`, at each `publish_times` slot (America/New_York, up to 90 min late), sends the oldest
+  approved candidate to the Make webhook (`MAKE_WEBHOOK_URL`), which publishes it with the official
+  Instagram API (`make/publicar-instagram.blueprint.json`). Then it is marked `published` and appended
+  to `data/history.json`.
+- Secrets: `APIFY_TOKEN`, `TELEGRAM_BOT_TOKEN`, `MAKE_WEBHOOK_URL` — repository secrets only.
 
 ## Cost
 
