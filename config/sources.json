@@ -5,6 +5,8 @@
   "results_per_hashtag": 20,
   "content_types": ["reels"],
   "max_age_days": 7,
+  "min_age_hours": 6,
+  "required_keywords": ["mustang", "s650", "s550", "s197", "gt350", "gt500", "mach1", "mach 1", "dark horse", "darkhorse", "foxbody", "fox body", "boss302", "boss 302", "bullitt"],
   "caption_hashtags": ["fordmustang", "mustang", "mustanggt", "shelby", "musclecar", "mustangemotion"],
   "excluded_authors": [],
   "posts_per_day": 2,

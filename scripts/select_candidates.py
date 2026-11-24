@@ -89,6 +89,14 @@ def main() -> None:
     }
     excluded = {a.lower() for a in config.get("excluded_authors", [])} | {config["account"].lower()}
     max_age = dt.timedelta(days=config.get("max_age_days", 7))
+    min_age = dt.timedelta(hours=config.get("min_age_hours", 0))
+    keywords = [k.lower() for k in config.get("required_keywords", [])]
+
+    def is_relevant(post: dict) -> bool:
+        if not keywords:
+            return True
+        text = " ".join([post.get("caption") or "", " ".join(post.get("hashtags") or [])]).lower()
+        return any(k in text for k in keywords)
 
     scored, unique = [], {}
     for p in posts:
@@ -97,7 +105,9 @@ def main() -> None:
         if not code or not author or not t or code in unique:
             continue
         unique[code] = p
-        if code in seen_codes or author in recent_authors or author in excluded or now - t > max_age:
+        if code in seen_codes or author in recent_authors or author in excluded:
+            continue
+        if not (min_age <= now - t <= max_age) or not is_relevant(p):
             continue
         hours = max((now - t).total_seconds() / 3600, 0)
         p["_engagement"] = engagement(p)
