@@ -52,7 +52,7 @@
   ],
   "excluded_authors": [],
   "posts_per_day": 2,
-  "candidates_per_day": 4,
+  "candidates_per_day": 8,
   "publish_times": [
     "12:00",
     "19:00"

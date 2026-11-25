@@ -1,0 +1,20 @@
+name: Connectar Telegram a Make
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "set = connectar el bot a Make · delete = desconnectar"
+        default: "set"
+
+jobs:
+  webhook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests
+      - env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          MAKE_WEBHOOK_URL: ${{ secrets.MAKE_WEBHOOK_URL }}
+          MODE: ${{ inputs.mode }}
+        run: python scripts/set_webhook.py

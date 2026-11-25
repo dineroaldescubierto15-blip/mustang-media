@@ -1,0 +1,62 @@
+{
+  "name": "Mustang Emotion – Hora de publicar",
+  "flow": [
+    {
+      "id": 1,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://api.github.com/repos/dineroaldescubierto15-blip/mustang-media/dispatches",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer ENGANXA_AQUI_EL_TOKEN_DE_GITHUB"
+          },
+          {
+            "name": "Accept",
+            "value": "application/vnd.github+json"
+          },
+          {
+            "name": "X-GitHub-Api-Version",
+            "value": "2022-11-28"
+          },
+          {
+            "name": "User-Agent",
+            "value": "mustangemotion-make"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\"event_type\": \"publish\"}",
+        "parseResponse": false,
+        "timeout": "60",
+        "shareCookies": false,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false
+    }
+  }
+}

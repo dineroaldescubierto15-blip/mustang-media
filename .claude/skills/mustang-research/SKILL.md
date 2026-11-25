@@ -47,14 +47,17 @@ and generation (S650/S550/S197/SN95) are detected from the original caption and 
 
 Every candidate needs Pol's approval before it is published. No exceptions.
 
-- `scripts/telegram_send.py` sends each candidate (video/photo + stats + caption) with ✅/❌ buttons.
-- `.github/workflows/bot.yml` runs every 5 min: `telegram_poll.py` records the answers in the
-  candidate file (`status`: pending → approved/rejected) and learns the chat id from `/start`;
-  `publish.py`, at each `publish_times` slot (America/New_York, up to 90 min late), sends the oldest
-  approved candidate to the Make webhook (`MAKE_WEBHOOK_URL`), which publishes it with the official
-  Instagram API (`make/publicar-instagram.blueprint.json`). Then it is marked `published` and appended
-  to `data/history.json`.
-- Secrets: `APIFY_TOKEN`, `TELEGRAM_BOT_TOKEN`, `MAKE_WEBHOOK_URL` — repository secrets only.
+- `telegram_send.py` sends each candidate (media + stats + status) with a single **✅ Aprovar** button,
+  plus a reply with the caption draft. Unapproved candidates expire after 3 days (`expired`).
+- Instant path: Telegram webhook → Make scenario "Publicar a Instagram + clics de Telegram" (route
+  "Telegram") → GitHub `repository_dispatch` `telegram` → `.github/workflows/events.yml` →
+  `telegram_event.py` (saves status, removes the button, updates the pinned queue) in < 1 min.
+- Publish times: Make scenario "Hora de publicar" (12:00 and 19:00, America/New_York) → dispatch
+  `publish` → `publish.py` → Make webhook → Instagram API. `bot.yml` (hourly-ish) is the fallback and
+  does maintenance (expiry, drafts, pinned queue); it only polls `getUpdates` when no webhook is set.
+- `set-webhook.yml` connects (`set`) or disconnects (`delete`) the Telegram bot from Make.
+- Secrets: `APIFY_TOKEN`, `TELEGRAM_BOT_TOKEN`, `MAKE_WEBHOOK_URL`. The GitHub token used by Make lives
+  only inside the Make HTTP modules.
 
 ## Cost
 

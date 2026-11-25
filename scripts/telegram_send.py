@@ -38,8 +38,7 @@ def main() -> None:
         if c.get("message_id"):
             continue
         keyboard = {"inline_keyboard": [[
-            {"text": "✅ Aprovar", "callback_data": f"a|{day}|{c['shortCode']}"},
-            {"text": "❌ Descartar", "callback_data": f"r|{day}|{c['shortCode']}"},
+            {"text": "✅ Aprovar per publicar", "callback_data": f"a|{day}|{c['shortCode']}"},
         ]]}
         media = ROOT / c["media_path"]
         is_video = c["media_type"] == "REELS"

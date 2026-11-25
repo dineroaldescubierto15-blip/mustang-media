@@ -1,5 +1,5 @@
 {
-  "name": "Mustang Emotion – Publicar a Instagram (webhook de GitHub)",
+  "name": "Mustang Emotion – Publicar a Instagram + clics de Telegram",
   "flow": [
     {
       "id": 1,
@@ -17,6 +17,88 @@
       "version": 1,
       "mapper": null,
       "routes": [
+        {
+          "flow": [
+            {
+              "id": 20,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true,
+                "useNewZLibDeCompress": true
+              },
+              "mapper": {
+                "url": "https://api.github.com/repos/dineroaldescubierto15-blip/mustang-media/dispatches",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer ENGANXA_AQUI_EL_TOKEN_DE_GITHUB"
+                  },
+                  {
+                    "name": "Accept",
+                    "value": "application/vnd.github+json"
+                  },
+                  {
+                    "name": "X-GitHub-Api-Version",
+                    "value": "2022-11-28"
+                  },
+                  {
+                    "name": "User-Agent",
+                    "value": "mustangemotion-make"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "data": "{\"event_type\": \"telegram\", \"client_payload\": {\"cb_id\": \"{{1.callback_query.id}}\", \"cb_data\": \"{{1.callback_query.data}}\", \"cb_chat\": \"{{1.callback_query.message.chat.id}}\", \"cb_msg\": \"{{1.callback_query.message.message_id}}\", \"text\": \"{{replace(1.message.text; /[^a-zA-Z0-9_\\/ ]/g; emptystring)}}\", \"chat\": \"{{1.message.chat.id}}\", \"chat_type\": \"{{1.message.chat.type}}\"}}",
+                "parseResponse": false,
+                "timeout": "60",
+                "shareCookies": false,
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false
+              },
+              "filter": {
+                "name": "Telegram (clic o ordre)",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.update_id}}",
+                      "o": "exist"
+                    },
+                    {
+                      "a": "{{1.callback_query.data}}",
+                      "o": "exist"
+                    }
+                  ],
+                  [
+                    {
+                      "a": "{{1.update_id}}",
+                      "o": "exist"
+                    },
+                    {
+                      "a": "{{1.message.text}}",
+                      "b": "/",
+                      "o": "text:startwith"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 21,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "mapper": null
+                }
+              ]
+            }
+          ]
+        },
         {
           "flow": [
             {
@@ -52,8 +134,8 @@
                   "version": 1,
                   "parameters": {},
                   "mapper": {
-                    "status": "500",
-                    "body": "{\"ok\": false, \"error\": \"{{replace(error.message; \"\\\"\"; \"'\")}}\"}",
+                    "status": 500,
+                    "body": "{\"ok\": false, \"error\": \"{{error.message}}\"}",
                     "headers": [
                       {
                         "key": "Content-Type",
@@ -76,7 +158,7 @@
               "version": 1,
               "parameters": {},
               "mapper": {
-                "status": "200",
+                "status": 200,
                 "body": "{\"ok\": true, \"post_id\": \"{{3.id}}\"}",
                 "headers": [
                   {
@@ -128,8 +210,8 @@
                   "version": 1,
                   "parameters": {},
                   "mapper": {
-                    "status": "500",
-                    "body": "{\"ok\": false, \"error\": \"{{replace(error.message; \"\\\"\"; \"'\")}}\"}",
+                    "status": 500,
+                    "body": "{\"ok\": false, \"error\": \"{{error.message}}\"}",
                     "headers": [
                       {
                         "key": "Content-Type",
@@ -152,7 +234,7 @@
               "version": 1,
               "parameters": {},
               "mapper": {
-                "status": "200",
+                "status": 200,
                 "body": "{\"ok\": true, \"post_id\": \"{{5.id}}\"}",
                 "headers": [
                   {

@@ -59,11 +59,14 @@ def chat_id() -> int | None:
 # ---------- Missatges de Telegram ----------
 
 STATUS_LABEL = {
-    "pending": "⏳ Pendent d'aprovar",
+    "pending": "⏳ Pendent · clica ✅ si el vols publicar (caduca en 3 dies)",
     "approved": "✅ APROVAT · a la cua per publicar",
     "rejected": "❌ DESCARTAT",
     "published": "📣 PUBLICAT",
+    "expired": "⌛ CADUCAT · no s'ha aprovat",
 }
+
+EXPIRE_DAYS = 3
 
 
 def title(c: dict) -> str:
@@ -183,3 +186,56 @@ def sync_drafts(tg: "Telegram", chat: int) -> None:
                 continue
         c["caption_sent"] = c["caption"]
         save_json(path, data)
+
+
+def expire_old(tg: "Telegram | None", chat: int | None) -> int:
+    """Marca com a caducats els candidats pendents de fa més de EXPIRE_DAYS dies."""
+    limit = (now_utc() - dt.timedelta(days=EXPIRE_DAYS)).date().isoformat()
+    n = 0
+    for path, data, c in iter_candidates(max_days=EXPIRE_DAYS + 7):
+        if c.get("status", "pending") == "pending" and path.stem <= limit:
+            c["status"] = "expired"
+            save_json(path, data)
+            if tg and chat:
+                mark_message(tg, chat, c)
+            n += 1
+    return n
+
+
+def handle_update(tg: "Telegram", state: dict, u: dict) -> None:
+    """Processa una actualització de Telegram (clic a un botó o ordre de text)."""
+    msg = u.get("message")
+    if msg and msg.get("chat", {}).get("type") == "private":
+        text = (msg.get("text") or "").strip().lower()
+        if text.startswith("/start") and not state.get("chat_id"):
+            state["chat_id"] = msg["chat"]["id"]
+            tg.call("sendMessage", chat_id=state["chat_id"],
+                    text="👋 Bot de @mustangemotion configurat. T'enviaré cada dia els candidats per aprovar.")
+        elif text.startswith("/cua") and msg["chat"]["id"] == state.get("chat_id"):
+            state.pop("pinned_message_id", None)
+            state.pop("pinned_text", None)
+        return
+
+    cq = u.get("callback_query")
+    if not cq or cq.get("message", {}).get("chat", {}).get("id") != state.get("chat_id"):
+        return  # només acceptem respostes del xat del propietari
+    action, day, code = ((cq.get("data") or "x|x|x").split("|", 2) + ["x", "x"])[:3]
+    path = CANDIDATES_DIR / f"{day}.json"
+    data = load_json(path, {"candidates": []})
+    cand = next((c for c in data["candidates"] if c["shortCode"] == code), None)
+    if cand and cand.get("status", "pending") in ("pending", "expired") and action in ("a", "r"):
+        cand["status"] = "approved" if action == "a" else "rejected"
+        cand["decided_at"] = now_utc().isoformat()
+        save_json(path, data)
+    if cand:
+        mark_message(tg, state["chat_id"], cand)
+    if cq.get("id"):
+        try:
+            tg.call("answerCallbackQuery", callback_query_id=cq["id"],
+                    text="Desat ✅" if cand else "Aquest candidat ja no existeix.")
+        except RuntimeError:
+            pass  # la consulta pot haver caducat; l'estat ja està desat
+
+
+def webhook_active(tg: "Telegram") -> bool:
+    return bool(tg.call("getWebhookInfo").get("url"))
