@@ -2,6 +2,7 @@
 import datetime as dt
 import json
 import os
+import time
 from zoneinfo import ZoneInfo
 from pathlib import Path
 
@@ -38,6 +39,18 @@ class Telegram:
         self.base = f"https://api.telegram.org/bot{token}"
 
     def call(self, method: str, files=None, **params):
+        for attempt in range(3):  # Telegram de vegades talla la connexió: es reintenta
+            try:
+                return self._call(method, files, **params)
+            except requests.exceptions.ConnectionError:
+                if attempt == 2:
+                    raise
+                if files:
+                    for fh in files.values():
+                        fh.seek(0)
+                time.sleep(2 * (attempt + 1))
+
+    def _call(self, method: str, files=None, **params):
         if files:
             data = {k: (json.dumps(v) if isinstance(v, (dict, list)) else v) for k, v in params.items()}
             r = requests.post(f"{self.base}/{method}", data=data, files=files, timeout=300)

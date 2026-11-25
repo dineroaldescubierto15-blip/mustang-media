@@ -18,6 +18,7 @@ def as_int(v):
 def main() -> None:
     event = json.load(open(os.environ["GITHUB_EVENT_PATH"]))
     p = event.get("client_payload") or {}
+    print("Rebut:", p.get("cb_data") or p.get("text") or p)
     if p.get("cb_data"):
         update = {"callback_query": {"id": p.get("cb_id"), "data": p["cb_data"],
                                      "message": {"message_id": as_int(p.get("cb_msg")),
