@@ -2,6 +2,7 @@
 """Processa un clic o una ordre que Make ha rebut de Telegram i ha reenviat a GitHub (repository_dispatch)."""
 import json
 import os
+from urllib.parse import unquote
 
 from common import (CONFIG_FILE, STATE_FILE, Telegram, handle_update, load_json, save_json, sync_drafts,
                     update_pinned)
@@ -22,7 +23,7 @@ def main() -> None:
                                      "message": {"message_id": as_int(p.get("cb_msg")),
                                                  "chat": {"id": as_int(p.get("cb_chat"))}}}}
     elif p.get("text"):
-        update = {"message": {"text": p["text"], "chat": {"id": as_int(p.get("chat")),
+        update = {"message": {"text": unquote(p["text"]), "chat": {"id": as_int(p.get("chat")),
                                                          "type": p.get("chat_type") or "private"}}}
     else:
         print("Esdeveniment sense dades útils:", p)

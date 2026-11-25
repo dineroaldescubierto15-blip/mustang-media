@@ -52,7 +52,7 @@
                 "qs": [],
                 "bodyType": "raw",
                 "contentType": "application/json",
-                "data": "{\"event_type\": \"telegram\", \"client_payload\": {\"cb_id\": \"{{1.callback_query.id}}\", \"cb_data\": \"{{1.callback_query.data}}\", \"cb_chat\": \"{{1.callback_query.message.chat.id}}\", \"cb_msg\": \"{{1.callback_query.message.message_id}}\", \"text\": \"{{replace(1.message.text; /[^a-zA-Z0-9_\\/ ]/g; emptystring)}}\", \"chat\": \"{{1.message.chat.id}}\", \"chat_type\": \"{{1.message.chat.type}}\"}}",
+                "data": "{\"event_type\": \"telegram\", \"client_payload\": {\"cb_id\": \"{{1.callback_query.id}}\", \"cb_data\": \"{{1.callback_query.data}}\", \"cb_chat\": \"{{1.callback_query.message.chat.id}}\", \"cb_msg\": \"{{1.callback_query.message.message_id}}\", \"text\": \"{{encodeURL(1.message.text)}}\", \"chat\": \"{{1.message.chat.id}}\", \"chat_type\": \"{{1.message.chat.type}}\"}}",
                 "parseResponse": false,
                 "timeout": "60",
                 "shareCookies": false,
