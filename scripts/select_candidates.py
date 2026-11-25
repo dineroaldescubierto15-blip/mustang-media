@@ -12,6 +12,7 @@ màxim `max_age_days` d'antiguitat, i un autor per candidat.
 import argparse
 import datetime as dt
 import json
+import os
 from pathlib import Path
 
 import requests
@@ -74,10 +75,13 @@ def main() -> None:
     posts = json.loads(Path(args.input).read_text())
     now = dt.datetime.now(UTC)
 
+    out_path = Path(args.output)
+    existing = json.loads(out_path.read_text()).get("candidates", []) if out_path.exists() else []
     seen_codes = {h.get("shortCode") for h in history}
-    for f in Path(args.output).parent.glob("*.json"):  # no tornar a proposar candidats d'altres dies
-        if f.resolve() != Path(args.output).resolve():
-            seen_codes |= {c.get("shortCode") for c in json.loads(f.read_text()).get("candidates", [])}
+    for f in out_path.parent.glob("*.json"):  # no tornar a proposar candidats ja enviats (de qualsevol dia)
+        seen_codes |= {c.get("shortCode") for c in json.loads(f.read_text()).get("candidates", [])}
+    want = int(os.environ.get("CANDIDATES") or config.get("candidates_per_day", 4))
+    reels_only = config.get("reels_only", False)
     recent_authors = {
         h.get("author", "").lower()
         for h in history
@@ -85,7 +89,7 @@ def main() -> None:
         and now - t < dt.timedelta(days=config.get("min_days_between_same_author", 14))
     }
     excluded = {a.lower() for a in config.get("excluded_authors", [])} | {config["account"].lower()}
-    max_age = dt.timedelta(days=config.get("max_age_days", 7))
+    max_age = dt.timedelta(days=int(os.environ.get("MAX_AGE_DAYS") or config.get("max_age_days", 7)))
     min_age = dt.timedelta(hours=config.get("min_age_hours", 0))
     keywords = [k.lower() for k in config.get("required_keywords", [])]
     strong = [k.lower() for k in config.get("strong_keywords", [])]
@@ -111,6 +115,8 @@ def main() -> None:
             continue
         if not (min_age <= now - t <= max_age) or not is_relevant(p):
             continue
+        if reels_only and not p.get("videoUrl"):
+            continue
         hours = max((now - t).total_seconds() / 3600, 0)
         p["_engagement"] = engagement(p)
         p["_velocity"] = p["_engagement"] / (hours + 2) ** 0.8
@@ -122,11 +128,10 @@ def main() -> None:
 
     media_dir = Path(args.media_dir)
     previous = sum(len(json.loads(f.read_text()).get("candidates", []))
-                   for f in Path(args.output).parent.glob("*.json")
-                   if f.resolve() != Path(args.output).resolve())
-    candidates, used_authors = [], set()
+                   for f in out_path.parent.glob("*.json"))
+    candidates, used_authors = [], {c["author"].lower() for c in existing}
     for p in scored:
-        if len(candidates) >= config.get("candidates_per_day", 4):
+        if len(candidates) >= want:
             break
         author = p["ownerUsername"].lower()
         if author in used_authors:
@@ -157,9 +162,9 @@ def main() -> None:
             "status": "pending",
         })
 
-    out = {"generated_at": now.isoformat(), "candidates": candidates}
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.output).write_text(json.dumps(out, indent=2, ensure_ascii=False))
+    out = {"generated_at": now.isoformat(), "candidates": existing + candidates}  # s'afegeix, mai se sobreescriu
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out, indent=2, ensure_ascii=False))
     for c in candidates:
         print(f"  @{c['author']}: {c['likes']} likes, {c['views']} views, {c['age_hours']} h, velocitat {c['velocity']}")
     print(f"{len(candidates)} candidats desats a {args.output}")

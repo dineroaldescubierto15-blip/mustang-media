@@ -42,8 +42,8 @@ def main() -> None:
         sys.exit("Falta APIFY_TOKEN")
 
     config = json.loads(Path(args.config).read_text())
-    tags = hashtags_for_today(config, dt.date.today())
-    limit = config.get("results_per_hashtag", 20)
+    tags = config["hashtags"] if os.environ.get("ALL_HASHTAGS") == "true" else hashtags_for_today(config, dt.date.today())
+    limit = int(os.environ.get("RESULTS_PER_HASHTAG") or config.get("results_per_hashtag", 20))
     print(f"Hashtags d'avui: {', '.join('#' + t for t in tags)} ({limit} resultats cadascun)")
 
     items: list[dict] = []

@@ -3,7 +3,24 @@ name: Recerca diària de candidats
 on:
   schedule:
     - cron: "17 11 * * *"   # cada dia cap a les 6:17 de Nova York (11:17 UTC)
-  workflow_dispatch: {}      # botó "Run workflow" per llançar-lo a mà
+  workflow_dispatch:         # botó "Run workflow" per llançar-lo a mà
+    inputs:
+      candidates:
+        description: "Quants candidats enviar (buit = el de la configuració)"
+        required: false
+        default: ""
+      all_hashtags:
+        description: "Buscar a tots els hashtags (no només els del dia)"
+        type: boolean
+        default: false
+      results_per_hashtag:
+        description: "Resultats per hashtag (buit = configuració)"
+        required: false
+        default: ""
+      max_age_days:
+        description: "Antiguitat màxima en dies (buit = configuració)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -33,9 +50,14 @@ jobs:
       - name: Descarrega posts dels hashtags del dia
         env:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          ALL_HASHTAGS: ${{ inputs.all_hashtags }}
+          RESULTS_PER_HASHTAG: ${{ inputs.results_per_hashtag }}
         run: python scripts/fetch_hashtags.py --output /tmp/raw.json
 
       - name: Puntua i tria candidats
+        env:
+          CANDIDATES: ${{ inputs.candidates }}
+          MAX_AGE_DAYS: ${{ inputs.max_age_days }}
         run: |
           DAY=$(date -u +%Y-%m-%d)
           echo "DAY=$DAY" >> "$GITHUB_ENV"
