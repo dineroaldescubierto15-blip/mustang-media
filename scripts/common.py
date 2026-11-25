@@ -91,6 +91,7 @@ def mark_message(tg: "Telegram", chat: int, c: dict) -> None:
     """Treu els botons i deixa escrit l'estat al missatge del candidat."""
     if not c.get("message_id"):
         return
+    c["marked_status"] = c.get("status")
     try:
         method = "editMessageText" if c.get("message_kind") == "text" else "editMessageCaption"
         field = "text" if method == "editMessageText" else "caption"
@@ -239,3 +240,11 @@ def handle_update(tg: "Telegram", state: dict, u: dict) -> None:
 
 def webhook_active(tg: "Telegram") -> bool:
     return bool(tg.call("getWebhookInfo").get("url"))
+
+
+def sync_marks(tg: "Telegram", chat: int) -> None:
+    """Actualitza els missatges dels candidats l'estat dels quals ha canviat sense passar per un clic."""
+    for path, data, c in iter_candidates():
+        if c.get("message_id") and c.get("status", "pending") != "pending" and c.get("marked_status") != c.get("status"):
+            mark_message(tg, chat, c)
+            save_json(path, data)

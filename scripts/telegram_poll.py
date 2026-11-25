@@ -9,7 +9,7 @@
 import os
 
 from common import (CONFIG_FILE, STATE_FILE, Telegram, expire_old, handle_update, load_json, save_json,
-                    sync_drafts, update_pinned, webhook_active)
+                    sync_drafts, sync_marks, update_pinned, webhook_active)
 
 
 def main() -> None:
@@ -33,6 +33,7 @@ def main() -> None:
     chat = state.get("chat_id")
     print(f"{expire_old(tg, chat)} candidats caducats")
     if chat:
+        sync_marks(tg, chat)
         sync_drafts(tg, chat)
     update_pinned(tg, state, config)
     save_json(STATE_FILE, state)
