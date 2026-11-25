@@ -79,9 +79,14 @@ def main() -> None:
                "caption": c["caption"], "author": c["author"], "shortCode": code}
     try:
         r = requests.post(webhook, json=payload, timeout=300)
-        # "Accepted" = Make ha rebut la petició però la pujada a Instagram encara s'està processant
-        ok = r.status_code == 200 and ('"ok"' in r.text or r.text.strip() == "Accepted")
-        detail = r.text[:200]
+        # Només és èxit si l'escenari de Make ha respost {"ok": true}. Un "Accepted" vol dir que
+        # l'escenari està aturat i la petició s'ha quedat a la cua del webhook sense publicar.
+        ok = r.status_code == 200 and '"ok": true' in r.text.replace('"ok":true', '"ok": true')
+        if r.text.strip() == "Accepted":
+            detail = ("Make ha rebut la petició però l'escenari no l'ha processat: comprova que l'escenari "
+                      "de Make estigui ACTIVAT.")
+        else:
+            detail = r.text[:200]
     except requests.RequestException as e:
         ok, detail = False, str(e)
 
