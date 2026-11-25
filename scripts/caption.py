@@ -7,6 +7,7 @@ Tres estils que roten (per poder comparar després quin funciona millor):
 Màxim 5 hashtags (límit d'Instagram des de desembre de 2025).
 """
 import hashlib
+import re
 
 STYLES = ["A", "B", "C"]
 MAX_HASHTAGS = 5
@@ -20,7 +21,7 @@ MODELS = [
     (["bullitt"], "Bullitt", "bullitt"),
     (["boss 302", "boss302"], "Boss 302", "boss302"),
     (["eleanor"], "Eleanor", "eleanor"),
-    (["rtr"], "Mustang RTR", "mustangrtr"),
+    (["rtr", "mustangrtr"], "Mustang RTR", "mustangrtr"),
     (["svt cobra", "terminator"], "SVT Cobra", "svtcobra"),
     (["foxbody", "fox body"], "Fox Body", "foxbody"),
     (["shelby"], "Shelby Mustang", "shelby"),
@@ -67,16 +68,21 @@ def _text(post: dict) -> str:
     return " ".join([post.get("caption") or "", " ".join(post.get("hashtags") or [])]).lower()
 
 
+def _has(text: str, words: list[str]) -> bool:
+    # inici de paraula, perquè "rtr" no coincideixi amb "portrait"
+    return any(re.search(r"(?<![a-z0-9])" + re.escape(w), text) for w in words)
+
+
 def detect(post: dict) -> tuple[str, list[str]]:
     """Retorna el nom del cotxe i els hashtags específics (model, generació)."""
     text = _text(post)
     name, tags = "Mustang", []
     for words, label, tag in MODELS:
-        if any(w in text for w in words):
+        if _has(text, words):
             name, tags = label, [tag]
             break
     for words, tag in GENERATIONS:
-        if any(w in text for w in words):
+        if _has(text, words):
             tags.append(tag)
             break
     return name, tags
