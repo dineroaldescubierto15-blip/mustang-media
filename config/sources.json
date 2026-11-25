@@ -96,5 +96,36 @@
     "289 cobra",
     "daytona coupe"
   ],
-  "reels_only": true
+  "reels_only": true,
+  "blocked_keywords": [
+    "made with @higgsfield",
+    "higgsfield",
+    "#aiart",
+    "#aigenerated",
+    "ai generated",
+    "ai-generated",
+    "#ai ",
+    "midjourney",
+    "sora",
+    "concept 2027",
+    "concept 2028",
+    "2027 concept",
+    "bike concept",
+    "motorcycle",
+    "motocicleta",
+    "motorbike",
+    "for sale",
+    "à vendre",
+    "a vendre",
+    "se vende",
+    "en venta",
+    "prix :",
+    "price:",
+    "dm for price",
+    "i'll send you the link",
+    "send you the link",
+    "link in bio to buy",
+    "use code",
+    "discount code"
+  ]
 }

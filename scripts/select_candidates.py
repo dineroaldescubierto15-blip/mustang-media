@@ -94,11 +94,14 @@ def main() -> None:
     keywords = [k.lower() for k in config.get("required_keywords", [])]
     strong = [k.lower() for k in config.get("strong_keywords", [])]
     excluded_words = [k.lower() for k in config.get("excluded_keywords", [])]
+    blocked = [k.lower() for k in config.get("blocked_keywords", [])]  # IA, motos, anuncis de venda, publicitat
 
     def is_relevant(post: dict) -> bool:
         """Família Mustang (inclosos Shelby, GT350, GT500…), sense pickups ni el Shelby Cobra clàssic."""
         text = " ".join([post.get("caption") or "", " ".join(post.get("hashtags") or [])]).lower()
         if keywords and not any(k in text for k in keywords):
+            return False
+        if any(k in text + " " for k in blocked):
             return False
         if any(k in text for k in excluded_words) and not any(k in text for k in strong):
             return False
