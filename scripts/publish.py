@@ -47,7 +47,10 @@ def next_approved():
 
 def main() -> None:
     config, state = load_json(CONFIG_FILE, {}), load_json(STATE_FILE, {})
-    slot = due_slot(config, state)
+    if os.environ.get("FORCE_PUBLISH") == "true":
+        slot = f"manual {now_utc():%Y-%m-%d %H:%M}"  # publicació demanada a mà, fora de franja
+    else:
+        slot = due_slot(config, state)
     if not slot:
         print("No és hora de publicar")
         return
