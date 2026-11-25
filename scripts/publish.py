@@ -80,8 +80,10 @@ def main() -> None:
     c = next(x for x in data["candidates"] if x["shortCode"] == code)
     payload = {"media_type": c["media_type"], "media_url": raw_url(c["media_path"]),
                "caption": c["caption"], "author": c["author"], "shortCode": code}
+    r_text_accepted = False
     try:
         r = requests.post(webhook, json=payload, timeout=300)
+        r_text_accepted = r.status_code == 200 and r.text.strip() == "Accepted"
         # Només és èxit si l'escenari de Make ha respost {"ok": true}. Un "Accepted" vol dir que
         # l'escenari està aturat i la petició s'ha quedat a la cua del webhook sense publicar.
         ok = r.status_code == 200 and '"ok": true' in r.text.replace('"ok":true', '"ok": true')
@@ -92,6 +94,22 @@ def main() -> None:
             detail = r.text[:200]
     except requests.RequestException as e:
         ok, detail = False, str(e)
+
+    if r_text_accepted:
+        # Make ha guardat la petició a la seva cua i la publicarà més tard: NO es pot tornar a enviar,
+        # o el post sortiria repetit. Es marca com a enviat i es demana comprovar-ho.
+        c["status"] = "published"
+        c["published_at"] = now_utc().isoformat()
+        c["publish_unconfirmed"] = True
+        save_json(path, data)
+        history = load_json(HISTORY_FILE, {"published": []})
+        history["published"].append({"shortCode": code, "author": c["author"], "published_at": c["published_at"],
+                                     "original_url": c["original_url"], "caption_style": c.get("caption_style"),
+                                     "unconfirmed": True})
+        save_json(HISTORY_FILE, history)
+        notify(f"⚠️ {title(c)}: Make ha rebut la publicació però no l'ha confirmada (l'escenari no és en mode "
+               f"immediat). Es publicarà quan Make la processi; no es tornarà a enviar. Comprova que surti un sol cop.")
+        return
 
     if not ok:
         notify(f"⚠️ No s'ha pogut publicar: {title(c)}. Continua aprovat i es tornarà a provar a la "
