@@ -58,6 +58,7 @@ def main() -> None:
             draft = tg.call("sendMessage", chat_id=chat, reply_to_message_id=msg["message_id"],
                             text=f"📝 Esborrany de la descripció:\n\n{c['caption']}", disable_notification=True)
             c["caption_message_id"] = draft["message_id"]
+            c["caption_sent"] = c["caption"]
             sent += 1
         except RuntimeError as e:
             print(f"Error enviant {c['shortCode']}: {e}")

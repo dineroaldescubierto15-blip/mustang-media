@@ -8,7 +8,7 @@
 import os
 
 from common import (CANDIDATES_DIR, CONFIG_FILE, STATE_FILE, Telegram, load_json, mark_message, now_utc,
-                    save_json, update_pinned)
+                    save_json, sync_drafts, update_pinned)
 
 
 def main() -> None:
@@ -55,6 +55,8 @@ def main() -> None:
         except RuntimeError:
             pass  # la consulta pot haver caducat; l'estat ja està desat
 
+    if state.get("chat_id"):
+        sync_drafts(tg, state["chat_id"])
     update_pinned(tg, state, config)
     save_json(STATE_FILE, state)
     print(f"{len(updates)} actualitzacions processades")

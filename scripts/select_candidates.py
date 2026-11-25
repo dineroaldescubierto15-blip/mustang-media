@@ -16,6 +16,8 @@ from pathlib import Path
 
 import requests
 
+import caption
+
 UTC = dt.timezone.utc
 
 
@@ -43,16 +45,8 @@ def engagement(post: dict) -> float:
     return likes + 3 * comments + 0.1 * views
 
 
-def caption_for(post: dict, config: dict) -> str:
-    author = post["ownerUsername"]
-    tags = " ".join("#" + t for t in config.get("caption_hashtags", config["hashtags"]))
-    return (
-        f"🎥 @{author}\n\n"
-        f"Follow @{config['account']} for daily Mustang content 🐎\n"
-        f"Tag @{config['account']} to get featured!\n\n"
-        f"{tags}"
-    )
-
+def caption_for(post: dict, config: dict, style: str) -> str:
+    return caption.build(post, style, config["account"])
 
 def download(url: str, dest: Path) -> bool:
     try:
@@ -127,6 +121,9 @@ def main() -> None:
     print(f"{len(unique)} posts únics, {len(scored)} passen els filtres")
 
     media_dir = Path(args.media_dir)
+    previous = sum(len(json.loads(f.read_text()).get("candidates", []))
+                   for f in Path(args.output).parent.glob("*.json")
+                   if f.resolve() != Path(args.output).resolve())
     candidates, used_authors = [], set()
     for p in scored:
         if len(candidates) >= config.get("candidates_per_day", 4):
@@ -142,6 +139,7 @@ def main() -> None:
         if not download(src, dest):
             continue
         used_authors.add(author)
+        style = caption.STYLES[(previous + len(candidates)) % len(caption.STYLES)]
         candidates.append({
             "shortCode": p["shortCode"],
             "author": p["ownerUsername"],
@@ -154,7 +152,8 @@ def main() -> None:
             "age_hours": p["_age_hours"],
             "velocity": round(p["_velocity"], 1),
             "original_caption": (p.get("caption") or "")[:500],
-            "caption": caption_for(p, config),
+            "caption_style": style,
+            "caption": caption_for(p, config, style),
             "status": "pending",
         })
 

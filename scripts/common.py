@@ -160,3 +160,26 @@ def update_pinned(tg: "Telegram", state: dict, config: dict) -> None:
         except RuntimeError as pin_err:
             print(f"No s'ha pogut fixar el missatge: {pin_err}")
     state["pinned_text"] = text.split("\n", 2)[2]
+
+
+def sync_drafts(tg: "Telegram", chat: int) -> None:
+    """Envia o actualitza l'esborrany de descripció dels candidats pendents/aprovats si ha canviat."""
+    for path, data, c in iter_candidates():
+        if c.get("status", "pending") not in ("pending", "approved") or not c.get("message_id"):
+            continue
+        if c.get("caption_sent") == c["caption"]:
+            continue
+        text = f"📝 Esborrany de la descripció:\n\n{c['caption']}"
+        try:
+            if c.get("caption_message_id"):
+                tg.call("editMessageText", chat_id=chat, message_id=c["caption_message_id"], text=text)
+            else:
+                msg = tg.call("sendMessage", chat_id=chat, reply_to_message_id=c["message_id"], text=text,
+                              disable_notification=True)
+                c["caption_message_id"] = msg["message_id"]
+        except RuntimeError as e:
+            if "not modified" not in str(e):
+                print(f"No s'ha pogut actualitzar l'esborrany de {c['shortCode']}: {e}")
+                continue
+        c["caption_sent"] = c["caption"]
+        save_json(path, data)

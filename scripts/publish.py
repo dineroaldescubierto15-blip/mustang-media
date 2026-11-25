@@ -100,7 +100,8 @@ def main() -> None:
     save_json(path, data)
     history = load_json(HISTORY_FILE, {"published": []})
     history["published"].append({"shortCode": code, "author": c["author"], "published_at": c["published_at"],
-                                 "original_url": c["original_url"]})
+                                 "original_url": c["original_url"],
+                                 "caption_style": c.get("caption_style")})
     save_json(HISTORY_FILE, history)
     notify(f"📣 Publicat: {title(c)}\nhttps://www.instagram.com/{config['account']}/\n\n"
            f"📝 Descripció publicada:\n{c['caption']}")
