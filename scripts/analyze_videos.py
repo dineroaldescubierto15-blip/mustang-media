@@ -111,11 +111,16 @@ def main() -> None:
     ap.add_argument("--sheets", required=True)
     args = ap.parse_args()
     posts = json.loads(Path(args.posts).read_text())
+    out = Path(args.output)
+    prev = json.loads(out.read_text()) if out.exists() else []
+    done = {r["shortCode"] for r in prev if "error" not in r}
+    posts = [p for p in posts if p["shortCode"] not in done]  # només els nous
     with ThreadPoolExecutor(max_workers=4) as ex:
         results = list(ex.map(lambda p: analyze(p, Path(args.sheets)), posts))
     ok = sum(1 for r in results if "error" not in r)
     print(f"{ok}/{len(results)} reels analitzats")
-    Path(args.output).write_text(json.dumps(results, indent=1))
+    results = [r for r in prev if r["shortCode"] in done] + results
+    out.write_text(json.dumps(results, indent=1))
 
 
 if __name__ == "__main__":

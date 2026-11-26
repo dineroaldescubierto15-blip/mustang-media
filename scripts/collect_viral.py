@@ -63,6 +63,10 @@ def main() -> None:
             "videoUrl": p["videoUrl"],
             "displayUrl": p.get("displayUrl"),
         })
+    out = Path(args.output)
+    if out.exists():  # s'acumula amb els d'altres recollides del mateix dia
+        prev = json.loads(out.read_text())
+        posts += [p for p in prev if p["shortCode"] not in seen]
     posts.sort(key=lambda x: x["views"], reverse=True)
     posts = posts[: args.top]
     print(f"{len(posts)} reels rellevants (de {len(seen)} únics)")
