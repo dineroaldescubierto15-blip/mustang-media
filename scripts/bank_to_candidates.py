@@ -9,6 +9,7 @@ import json
 import os
 
 import caption
+from end_card import add_end_card, question_from_caption
 from common import CANDIDATES_DIR, CONFIG_FILE, ROOT, load_json, now_utc, save_json
 
 BANK = ROOT / "data" / "bank.json"
@@ -20,6 +21,10 @@ def main() -> None:
     ap.add_argument("--count", type=int, default=0)
     args = ap.parse_args()
     config = load_json(CONFIG_FILE, {})
+    if not config.get("use_bank", False):
+        # El banc són reels que ja tenen milions de visualitzacions: Instagram els tracta com a duplicats.
+        print("Banc desactivat (use_bank: false): es fa servir la cerca de reels recents")
+        return
     want = args.count or int(config.get("candidates_per_day", 8))
     bank = load_json(BANK, {"reels": []})
     avail = [r for r in bank["reels"] if r.get("status") == "banked"]
@@ -37,12 +42,16 @@ def main() -> None:
         age_h = 0.0
         if r.get("timestamp"):
             age_h = (now_utc() - dt.datetime.fromisoformat(r["timestamp"].replace("Z", "+00:00"))).total_seconds() / 3600
+        text = caption.build(post, style, config["account"])
+        card = question_from_caption(text)
+        if not add_end_card(ROOT / r["media_path"], card):
+            card = None
         data["candidates"].append({
             "shortCode": r["shortCode"], "author": r["author"], "original_url": r["original_url"],
             "media_type": "REELS", "media_path": r["media_path"], "likes": r["likes"], "comments": r["comments"],
             "views": r["views"], "age_hours": round(age_h, 1), "velocity": r["score"],
             "original_caption": r["caption_original"], "caption_style": style,
-            "caption": caption.build(post, style, config["account"]), "status": "pending",
+            "caption": text, "status": "pending", "end_card": card,
             "source": "banc", "score_reasons": r.get("why", []),
         })
         r["status"] = "sent"

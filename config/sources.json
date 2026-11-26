@@ -12,8 +12,8 @@
   "content_types": [
     "reels"
   ],
-  "max_age_days": 7,
-  "min_age_hours": 6,
+  "max_age_days": 3,
+  "min_age_hours": 3,
   "required_keywords": [
     "mustang",
     "s650",
@@ -127,5 +127,8 @@
     "link in bio to buy",
     "use code",
     "discount code"
-  ]
+  ],
+  "max_views": 300000,
+  "use_bank": false,
+  "end_card": true
 }

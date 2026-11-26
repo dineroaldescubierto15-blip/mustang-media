@@ -7,7 +7,13 @@ Puntuació (adaptada d'instagram-research):
 Es prioritza la velocitat: un post que acumula interacció ràpid té més potencial viral.
 
 Filtres: ni repetits ni el mateix autor en `min_days_between_same_author` dies,
-màxim `max_age_days` d'antiguitat, i un autor per candidat.
+màxim `max_age_days` d'antiguitat, màxim `max_views` visualitzacions i un autor per candidat.
+
+Estratègia «abans que sigui viral»: només reels recents (poques hores/dies) que encara no han explotat.
+Si es reposteja un reel que ja té milions de visualitzacions, Instagram el detecta com a duplicat i a qui
+no ens segueix li ensenya l'original. Si arribem abans, el nostre competeix.
+
+Als reels se'ls afegeix una pantalla negra final amb la pregunta de la descripció (scripts/end_card.py).
 """
 import argparse
 import datetime as dt
@@ -19,6 +25,7 @@ import requests
 
 import caption
 import math
+from end_card import add_end_card, question_from_caption
 from viral_score import score as viral_score
 
 UTC = dt.timezone.utc
@@ -93,6 +100,7 @@ def main() -> None:
     excluded = {a.lower() for a in config.get("excluded_authors", [])} | {config["account"].lower()}
     max_age = dt.timedelta(days=int(os.environ.get("MAX_AGE_DAYS") or config.get("max_age_days", 7)))
     min_age = dt.timedelta(hours=config.get("min_age_hours", 0))
+    max_views = int(config.get("max_views", 0))
     keywords = [k.lower() for k in config.get("required_keywords", [])]
     strong = [k.lower() for k in config.get("strong_keywords", [])]
     excluded_words = [k.lower() for k in config.get("excluded_keywords", [])]
@@ -121,6 +129,9 @@ def main() -> None:
         if not (min_age <= now - t <= max_age) or not is_relevant(p):
             continue
         if reels_only and not p.get("videoUrl"):
+            continue
+        views = num(p, "videoPlayCount", "videoViewCount")
+        if max_views and views > max_views:  # ja s'ha fet viral: Instagram ensenyaria l'original i no el nostre
             continue
         hours = max((now - t).total_seconds() / 3600, 0)
         p["_engagement"] = engagement(p)
@@ -155,6 +166,12 @@ def main() -> None:
             continue
         used_authors.add(author)
         style = caption.STYLES[(previous + len(candidates)) % len(caption.STYLES)]
+        text = caption_for(p, config, style)
+        card = None
+        if is_video and config.get("end_card", True):  # pantalla negra final amb la pregunta de la descripció
+            card = question_from_caption(text)
+            if not add_end_card(dest, card):
+                card = None
         candidates.append({
             "shortCode": p["shortCode"],
             "author": p["ownerUsername"],
@@ -168,7 +185,8 @@ def main() -> None:
             "velocity": round(p["_velocity"], 1),
             "original_caption": (p.get("caption") or "")[:500],
             "caption_style": style,
-            "caption": caption_for(p, config, style),
+            "caption": text,
+            "end_card": card,
             "status": "pending",
         })
 

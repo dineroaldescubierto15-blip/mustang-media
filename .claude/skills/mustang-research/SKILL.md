@@ -26,8 +26,22 @@ Run it by hand from GitHub: Actions → "Recerca diària de candidats" → Run w
 - engagement = likes + 3 × comments + 0.1 × views
 - velocity = engagement / (hours since posting + 2) ^ 0.8 — candidates are ranked by velocity
 - Filtered out: already published (`data/history.json`), same author within
-  `min_days_between_same_author` days, older than `max_age_days`, `excluded_authors`, our own account,
-  and more than one candidate per author.
+  `min_days_between_same_author` days, younger than `min_age_hours` (3 h) or older than `max_age_days`
+  (3 days), more than `max_views` views (300k), `excluded_authors`, our own account, and more than one
+  candidate per author.
+- **"Before it goes viral" strategy (Nov 2026):** Instagram treats a repost of a reel that already has
+  millions of views as a duplicate and shows the original to non-followers. So we only take fresh reels
+  that are gaining momentum but haven't exploded yet. The reel bank (`data/bank.json`, old mega-viral
+  reels) is switched off with `use_bank: false`; set it to `true` only to go back to it.
+
+## End card
+
+`scripts/end_card.py` appends a 3-second black screen to every reel: the caption's question in large
+white Anton capitals, a gold rule, "COMMENT BELOW ↓" and @mustangemotion (fonts in `assets/fonts/`, OFL).
+The question is the caption hook without emojis (style A keeps only the question part), stored as
+`end_card` in the candidate. Applied when candidates are created (`end_card: true` in config), so the
+Telegram preview already shows it. `python scripts/end_card.py --queue` adds it to approved reels that
+don't have it yet. If ffmpeg fails, the original video is kept.
 
 ## Captions
 
