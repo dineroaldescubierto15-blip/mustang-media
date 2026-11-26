@@ -1,0 +1,53 @@
+name: Estudi de reels virals
+
+on:
+  workflow_dispatch:
+    inputs:
+      hashtags:
+        description: "Hashtags separats per comes"
+        default: "fordmustang,mustang,mustanggt,shelby,gt500,gt350,darkhorse,s650,s550,mustangnation,foxbody,mach1"
+      per_hashtag:
+        description: "Reels per hashtag"
+        default: "50"
+      top:
+        description: "Quants reels estudiar"
+        default: "200"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests && sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Recull reels virals
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          D=analysis/$(date -u +%Y-%m-%d)
+          echo "D=$D" >> "$GITHUB_ENV"
+          python scripts/collect_viral.py --hashtags "${{ inputs.hashtags }}" \
+            --per-hashtag ${{ inputs.per_hashtag }} --top ${{ inputs.top }} --output $D/posts.json
+      - name: Separa i mesura cada reel
+        run: python scripts/analyze_videos.py --posts $D/posts.json --output $D/metrics.json --sheets $D/sheets
+      - name: Desa els resultats
+        if: always()
+        run: |
+          git config user.name "mustang-bot"
+          git config user.email "mustang-bot@users.noreply.github.com"
+          git add analysis
+          git diff --cached --quiet && exit 0
+          git commit -m "Estudi de reels virals $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 3; done
