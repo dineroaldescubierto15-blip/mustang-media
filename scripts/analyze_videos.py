@@ -44,6 +44,44 @@ def motion_first_second(path: Path) -> float:
     return round(sum(vals) / len(vals), 4) if vals else 0.0
 
 
+def visual_stats(path: Path) -> dict:
+    """Brillantor i saturació mitjanes (per detectar nit / posta de sol / colors vius) i moviment global."""
+    err = run(["ffmpeg", "-hide_banner", "-i", str(path), "-filter:v",
+               "fps=2,signalstats,metadata=print", "-an", "-f", "null", "-"])
+    y = [float(v) for v in re.findall(r"lavfi.signalstats.YAVG=([\d.]+)", err)]
+    sat = [float(v) for v in re.findall(r"lavfi.signalstats.SATAVG=([\d.]+)", err)]
+    err2 = run(["ffmpeg", "-hide_banner", "-i", str(path), "-filter:v",
+                "fps=5,select='gte(scene,0)',metadata=print", "-an", "-f", "null", "-"])
+    sc = [float(v) for v in re.findall(r"lavfi.scene_score=([\d.]+)", err2)]
+    return {"brightness": round(sum(y) / len(y), 1) if y else None,
+            "saturation": round(sum(sat) / len(sat), 1) if sat else None,
+            "motion_avg": round(sum(sc) / len(sc), 4) if sc else None}
+
+
+def text_overlay(path: Path) -> str:
+    """Text en pantalla al primer segon i mig (OCR), per detectar ganxos escrits."""
+    with tempfile.TemporaryDirectory() as tmp:
+        f = Path(tmp) / "f.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-ss", "1.5", "-i", str(path), "-frames:v", "1",
+                        "-vf", "scale=720:-2", str(f)], timeout=60)
+        if not f.exists():
+            return ""
+        out = subprocess.run(["tesseract", str(f), "-", "--psm", "11", "tsv"], capture_output=True, text=True,
+                             timeout=60).stdout
+    words = []
+    for line in out.splitlines()[1:]:
+        cols = line.split("\t")
+        if len(cols) == 12 and cols[11].strip():
+            try:
+                conf = float(cols[10])
+            except ValueError:
+                continue
+            w = cols[11].strip()
+            if conf >= 80 and re.fullmatch(r"[A-Za-z][A-Za-z']{2,}|\d{2,4}", w):
+                words.append(w)
+    return " ".join(words)[:200]
+
+
 def loudness(path: Path) -> dict:
     err = run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-f", "null", "-"])
     mean = re.search(r"mean_volume: (-?[\d.]+) dB", err)
@@ -61,7 +99,7 @@ def contact_sheet(path: Path, duration: float, out: Path) -> None:
         for i, t in enumerate(times):
             f = Path(tmp) / f"{i}.jpg"
             subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", str(path), "-frames:v", "1",
-                            "-vf", "scale=160:-2", str(f)], timeout=60)
+                            "-vf", "scale=160:284:force_original_aspect_ratio=decrease", "-pix_fmt", "yuvj420p", str(f)], timeout=60)
             if f.exists():
                 frames.append(str(f))
         if not frames:
@@ -100,6 +138,11 @@ def analyze(post: dict, sheets_dir: Path) -> dict:
         res["motion_1s"] = motion_first_second(video)
         if info["has_audio"]:
             res.update(loudness(video))
+        res.update(visual_stats(video))
+        try:
+            res["text_1s"] = text_overlay(video)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            res["text_1s"] = None
         contact_sheet(video, dur, sheets_dir / f"{post['shortCode']}.jpg")
     return res
 
@@ -113,12 +156,15 @@ def main() -> None:
     posts = json.loads(Path(args.posts).read_text())
     out = Path(args.output)
     prev = json.loads(out.read_text()) if out.exists() else []
-    done = {r["shortCode"] for r in prev if "error" not in r}
+    done = {r["shortCode"] for r in prev if "error" not in r and "brightness" in r}
     posts = [p for p in posts if p["shortCode"] not in done]  # només els nous
     with ThreadPoolExecutor(max_workers=4) as ex:
         results = list(ex.map(lambda p: analyze(p, Path(args.sheets)), posts))
     ok = sum(1 for r in results if "error" not in r)
     print(f"{ok}/{len(results)} reels analitzats")
+    old = {r["shortCode"]: r for r in prev if "error" not in r}
+    # si un reel antic ja no es pot tornar a descarregar (enllaç caducat), es conserven les mètriques que tenia
+    results = [old[r["shortCode"]] if "error" in r and r["shortCode"] in old else r for r in results]
     results = [r for r in prev if r["shortCode"] in done] + results
     out.write_text(json.dumps(results, indent=1))
 
