@@ -18,6 +18,8 @@ from pathlib import Path
 import requests
 
 import caption
+import math
+from viral_score import score as viral_score
 
 UTC = dt.timezone.utc
 
@@ -123,6 +125,11 @@ def main() -> None:
         hours = max((now - t).total_seconds() / 3600, 0)
         p["_engagement"] = engagement(p)
         p["_velocity"] = p["_engagement"] / (hours + 2) ** 0.8
+        # criteris de l'estudi de reels virals: clàssics, nit, so original… pugen; drift, no-Mustang… baixen
+        vs, _ = viral_score({**p, "views": p.get("videoPlayCount") or p.get("videoViewCount") or 0,
+                             "original_audio": (p.get("musicInfo") or {}).get("uses_original_audio")})
+        bonus = vs - math.log10(max(p.get("videoPlayCount") or p.get("videoViewCount") or 1, 1))
+        p["_velocity"] *= 10 ** bonus
         p["_age_hours"] = round(hours, 1)
         scored.append(p)
 
