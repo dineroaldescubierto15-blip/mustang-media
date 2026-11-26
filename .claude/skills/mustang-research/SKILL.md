@@ -10,7 +10,7 @@ account list, scores by engagement velocity, and prepares repost candidates with
 
 ## Where it runs
 
-Daily in GitHub Actions (`.github/workflows/daily-research.yml`), because the Apify API is not reachable
+Every night at 04:17 UTC (05:17 Barcelona, candidates silently in Telegram before 08:00) in GitHub Actions (`.github/workflows/daily-research.yml`), because the Apify API is not reachable
 from the Claude workspace. `APIFY_TOKEN` lives only as a repository secret — never write it to a file.
 Run it by hand from GitHub: Actions → "Recerca diària de candidats" → Run workflow.
 

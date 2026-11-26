@@ -2,7 +2,8 @@ name: Recerca diària de candidats
 
 on:
   schedule:
-    - cron: "17 11 * * *"   # cada dia cap a les 6:17 de Nova York (11:17 UTC)
+    - cron: "17 4 * * *"    # cada nit a les 4:17 UTC: 5:17 a Barcelona (6:17 a l'estiu), 23:17 a Nova York.
+                            # Marge per als retards de GitHub perquè els candidats hi siguin abans de les 8.
   workflow_dispatch:         # botó "Run workflow" per llançar-lo a mà
     inputs:
       candidates:

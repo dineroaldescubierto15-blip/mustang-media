@@ -47,11 +47,12 @@ def main() -> None:
                 with media.open("rb") as fh:
                     msg = tg.call("sendVideo" if is_video else "sendPhoto",
                                   files={"video" if is_video else "photo": fh},
-                                  chat_id=chat, caption=header(c), reply_markup=keyboard)
+                                  chat_id=chat, caption=header(c), reply_markup=keyboard,
+                                  disable_notification="true")  # la cerca és de nit: sense so
                 c["message_kind"] = "media"
             else:
                 msg = tg.call("sendMessage", chat_id=chat, text=header(c), reply_markup=keyboard,
-                              disable_web_page_preview=True)
+                              disable_web_page_preview=True, disable_notification=True)
                 c["message_kind"] = "text"
             c["message_id"] = msg["message_id"]
             draft = tg.call("sendMessage", chat_id=chat, reply_to_message_id=msg["message_id"],
