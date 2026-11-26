@@ -100,14 +100,31 @@ def hashtags(post: dict, account: str) -> list[str]:
     return tags[:MAX_HASHTAGS]
 
 
+CREDIT_RX = re.compile(r"(?:credit|credits|video credit|owner|📸|🎥|📹|filmed by|video by|shot by|via|dm)\W{0,6}@([A-Za-z0-9_.]{2,30})",
+                       re.IGNORECASE)
+
+
+def original_creators(post: dict) -> list[str]:
+    """Si el post diu de qui és el vídeo (Credit: @x, 📸: @x…), el crèdit també ha d'anar per a aquesta persona."""
+    author = (post.get("ownerUsername") or post.get("author") or "").lower()
+    found = []
+    for h in CREDIT_RX.findall(post.get("caption") or ""):
+        h = h.rstrip(".")
+        if h.lower() != author and h.lower() not in [f.lower() for f in found]:
+            found.append(h)
+    return found[:2]
+
+
 def build(post: dict, style: str, account: str) -> str:
     car, _ = detect(post)
     seed = int(hashlib.md5((post.get("shortCode") or "").encode()).hexdigest(), 16)
     hook = HOOKS[style][seed % len(HOOKS[style])].format(car=car)
     credit = "🎥" if post.get("videoUrl") or post.get("media_type") == "REELS" else "📷"
     author = post.get("ownerUsername") or post.get("author")
+    originals = original_creators(post)
+    credit_line = (" ".join("@" + o for o in originals) + f" (via @{author})") if originals else f"@{author}"
     tags = " ".join("#" + t for t in hashtags(post, account))
     return (
         f"{hook}\n-\n{FOLLOW[style].format(account=account)}\n-\n"
-        f"{credit} by: @{author}\n{DISCLAIMER}\n{tags}"
+        f"{credit} by: {credit_line}\n{DISCLAIMER}\n{tags}"
     )
