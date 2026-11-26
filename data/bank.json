@@ -22,7 +22,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/DW9aiVXvkCi.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "C5gRCW7spy-",
@@ -51,7 +52,8 @@
         "+0.15 muntatge lleuger (4-8 plans)"
       ],
       "media_path": "media/bank/C5gRCW7spy-.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "DOoTBl5DFe6",
@@ -81,7 +83,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/DOoTBl5DFe6.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "DdZguekRv17",
@@ -107,7 +110,8 @@
         "+0.15 muntatge lleuger (4-8 plans)"
       ],
       "media_path": "media/bank/DdZguekRv17.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "DI7-zQoxcpN",
@@ -131,7 +135,8 @@
         "+0.05 text en pantalla"
       ],
       "media_path": "media/bank/DI7-zQoxcpN.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "DboIfPtPthp",
@@ -157,7 +162,8 @@
         "+0.05 text en pantalla"
       ],
       "media_path": "media/bank/DboIfPtPthp.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "C0k9XhaNzuh",
@@ -202,7 +208,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/C0k9XhaNzuh.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "DPjjJ0kAHmj",
@@ -247,7 +254,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/DPjjJ0kAHmj.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-26"
     },
     {
       "shortCode": "CnfIf0gNVMA",
