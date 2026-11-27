@@ -126,6 +126,17 @@ def main() -> None:
     save_json(HISTORY_FILE, history)
     notify(f"📣 Publicat: {title(c)}\nhttps://www.instagram.com/{config['account']}/\n\n"
            f"📝 Descripció publicada:\n{c['caption']}")
+    if config.get("tiktok", {}).get("enabled") and not c.get("tiktok_post_id"):
+        try:  # TikTok mai bloqueja Instagram: si falla, s'avisa i prou
+            import tiktok
+            c["tiktok_post_id"] = tiktok.publish_candidate(c, config) or "ok"
+            c["tiktok_published_at"] = now_utc().isoformat()
+            save_json(path, data)
+            notify(f"🎵 També publicat a TikTok: {title(c)}")
+        except Exception as e:  # noqa: BLE001
+            c["tiktok_error"] = str(e)[:300]
+            save_json(path, data)
+            notify(f"⚠️ No s'ha pogut publicar a TikTok: {title(c)}\nDetall: {str(e)[:200]}")
     if tg:
         mark_message(tg, state["chat_id"], c)
         update_pinned(tg, state, config)

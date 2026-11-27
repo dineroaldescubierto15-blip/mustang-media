@@ -36,6 +36,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           MAKE_WEBHOOK_URL: ${{ secrets.MAKE_WEBHOOK_URL }}
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
         run: python scripts/publish.py
 
       - name: Desa els canvis al repositori

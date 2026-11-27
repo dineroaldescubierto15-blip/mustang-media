@@ -130,5 +130,9 @@
   ],
   "max_views": 300000,
   "use_bank": false,
-  "end_card": true
+  "end_card": true,
+  "tiktok": {
+    "enabled": false,
+    "account_id": ""
+  }
 }
