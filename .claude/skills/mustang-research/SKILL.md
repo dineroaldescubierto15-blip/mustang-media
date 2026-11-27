@@ -86,3 +86,18 @@ stay under the free monthly credit; raise `hashtags_per_day` or `results_per_has
   `/cua` in the chat re-sends and re-pins it.
 - Relevance: the whole Mustang family counts (Shelby, GT350, GT500, Mach 1, Bullitt…); trucks and the
   classic Shelby Cobra are excluded unless a strong Mustang keyword appears (`config/sources.json`).
+
+## TikTok (Nov 2026)
+
+- `scripts/tiktok.py`: after a successful Instagram publish (`publish.py`), if `tiktok.enabled` in config, the same
+  approved reel is posted to TikTok through Zernio (free plan, audited TikTok API). The TikTok version strips the
+  Instagram end card, adds a topic hook (first 3.5 s), an on-screen credit ("video: @author") and the end card again;
+  caption = question + car model + credit + 4-5 hashtags. Duets/stitches off. A TikTok failure never blocks Instagram.
+- Needs secret `ZERNIO_API_KEY` and `tiktok.account_id` (get it with the "Comptes de TikTok a Zernio" workflow).
+- No TikTok Creator Rewards: Spain is not an eligible country and reposts never qualify. TikTok is a growth channel.
+- Recommended pace: 2 per day (the Instagram approvals). Preview a version: `python scripts/tiktok.py preview ...`.
+
+## Apify credit
+
+Free plan = $5/month. Normal use (3 hashtags × 20 reels/day) fits; one-off studies can exhaust it. If the daily
+fetch fails, `daily-research.yml` falls back to 4 bank reels (`bank_to_candidates.py --force`) and warns on Telegram.
