@@ -1,0 +1,36 @@
+name: Pàgina d'enllaços de la bio
+
+# Publica bio/ a GitHub Pages cada cop que canvia (cal tenir Settings → Pages → Source: GitHub Actions).
+on:
+  push:
+    branches: [main]
+    paths: ["bio/**", "scripts/build_bio.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/build_bio.py && mkdir -p _site && cp bio/index.html _site/ && touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

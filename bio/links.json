@@ -1,0 +1,59 @@
+{
+  "_com_funciona": "Cada botiga té 'url' (enllaç que surt a la pàgina). Quan t'aprovin al programa d'afiliats, substitueix 'url' pel teu enllaç d'afiliat i posa 'affiliate': true. Després de desar, GitHub torna a publicar la pàgina sol.",
+  "title": "Mustang Emotion",
+  "handle": "@mustangemotion",
+  "instagram": "https://www.instagram.com/mustangemotion/",
+  "banner": {
+    "active": true,
+    "kicker": "Black Friday",
+    "text": "The best Mustang deals of the year are live. Parts, lights, detailing and gifts."
+  },
+  "sections": [
+    {
+      "name": "Parts & performance",
+      "note": "Upgrades, mods and replacement parts",
+      "stores": [
+        {"name": "CJ Pony Parts", "tag": "Mustang specialist", "url": "https://www.cjponyparts.com/", "affiliate": false},
+        {"name": "RTR Vehicles", "tag": "RTR parts & styling", "url": "https://www.rtrvehicles.com/", "affiliate": false},
+        {"name": "Summit Racing", "tag": "Performance parts", "url": "https://www.summitracing.com/", "affiliate": false},
+        {"name": "JEGS", "tag": "Performance parts", "url": "https://www.jegs.com/", "affiliate": false},
+        {"name": "Advance Auto Parts", "tag": "Everyday parts", "url": "https://shop.advanceautoparts.com/", "affiliate": false}
+      ]
+    },
+    {
+      "name": "Lights & accessories",
+      "note": "Lighting, mats, covers and cameras",
+      "stores": [
+        {"name": "ORACLE Lighting", "tag": "LED headlights & tails", "url": "https://www.oraclelights.com/", "affiliate": false},
+        {"name": "Lasfit", "tag": "LED bulbs & floor mats", "url": "https://www.lasfit.com/", "affiliate": false},
+        {"name": "CarCovers.com", "tag": "Custom-fit covers", "url": "https://www.carcovers.com/", "affiliate": false},
+        {"name": "Vantrue", "tag": "Dash cams", "url": "https://www.vantrue.com/", "affiliate": false}
+      ]
+    },
+    {
+      "name": "Wheels & tires",
+      "note": "",
+      "stores": [
+        {"name": "Tire Rack", "tag": "Wheels & tires", "url": "https://www.tirerack.com/", "affiliate": false}
+      ]
+    },
+    {
+      "name": "Detailing",
+      "note": "Keep it clean",
+      "stores": [
+        {"name": "Chemical Guys", "tag": "Wash, polish, interior", "url": "https://www.chemicalguys.com/", "affiliate": false},
+        {"name": "Shine Armor", "tag": "Ceramic coatings", "url": "https://shinearmor.com/", "affiliate": false}
+      ]
+    },
+    {
+      "name": "Models, LEGO & gifts",
+      "note": "For collectors and Mustang fans",
+      "stores": [
+        {"name": "LEGO Mustang sets", "tag": "Build your own", "url": "https://www.lego.com/en-us/search?q=mustang", "affiliate": false},
+        {"name": "Diecast Models Wholesale", "tag": "Scale models", "url": "https://www.diecastmodelswholesale.com/", "affiliate": false},
+        {"name": "Mustang gifts on Amazon", "tag": "Apparel, models, garage decor", "url": "https://www.amazon.com/s?k=ford+mustang+gifts", "affiliate": false},
+        {"name": "Mustang parts on eBay", "tag": "New & used parts", "url": "https://www.ebay.com/sch/i.html?_nkw=ford+mustang+parts", "affiliate": false}
+      ]
+    }
+  ]
+}
