@@ -303,7 +303,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/CnfIf0gNVMA.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-27"
     },
     {
       "shortCode": "DexAKnIFH6x",
@@ -321,7 +322,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/DexAKnIFH6x.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-27"
     },
     {
       "shortCode": "DHuNmUPy6Dr",
@@ -357,7 +359,8 @@
         "+0.1 so original"
       ],
       "media_path": "media/bank/DHuNmUPy6Dr.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-27"
     },
     {
       "shortCode": "Cw25HcWOtv6",
@@ -399,7 +402,8 @@
         "-0.15 2-3 plans"
       ],
       "media_path": "media/bank/Cw25HcWOtv6.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-27"
     },
     {
       "shortCode": "DVEc5QlDzxp",
