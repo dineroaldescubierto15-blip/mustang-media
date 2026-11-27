@@ -61,15 +61,44 @@ jobs:
           cd scripts && python bank_to_candidates.py --day $DAY
 
       - name: Descarrega posts dels hashtags del dia
+        id: fetch
         if: env.USE_BANK != 'true'
+        continue-on-error: true   # si s'acaba el crèdit d'Apify, es fan servir reels del banc
         env:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           ALL_HASHTAGS: ${{ inputs.all_hashtags }}
           RESULTS_PER_HASHTAG: ${{ inputs.results_per_hashtag }}
         run: python scripts/fetch_hashtags.py --output /tmp/raw.json
 
+      - name: Sense crèdit d'Apify → reels del banc
+        if: env.USE_BANK != 'true' && steps.fetch.outcome == 'failure'
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          DAY=$(date -u +%Y-%m-%d)
+          echo "DAY=$DAY" >> "$GITHUB_ENV"
+          cd scripts
+          python bank_to_candidates.py --day $DAY --force --count 4
+          python - <<'PY'
+          import os, requests
+          from common import Telegram, chat_id
+          end = "?"
+          try:
+              d = requests.get("https://api.apify.com/v2/users/me/limits", params={"token": os.environ["APIFY_TOKEN"]},
+                               timeout=60).json()["data"]
+              end = (d.get("monthlyUsageCycle") or {}).get("endAt", "?")[:10]
+              print("Apify:", d["current"].get("monthlyUsageUsd"), "de", d["limits"].get("maxMonthlyUsageUsd"), "USD; cicle fins", end)
+          except Exception as e:
+              print("No s'ha pogut llegir el crèdit d'Apify:", e)
+          if os.environ.get("TELEGRAM_BOT_TOKEN") and chat_id():
+              Telegram(os.environ["TELEGRAM_BOT_TOKEN"]).call("sendMessage", chat_id=chat_id(), disable_notification=True,
+                  text=f"⚠️ La cerca d'avui no ha funcionat (probablement s'ha acabat el crèdit gratuït d'Apify, que es renova el {end}). "
+                       "T'envio 4 reels del banc perquè no quedi cap franja buida.")
+          PY
+
       - name: Puntua i tria candidats
-        if: env.USE_BANK != 'true'
+        if: env.USE_BANK != 'true' && steps.fetch.outcome == 'success'
         env:
           CANDIDATES: ${{ inputs.candidates }}
           MAX_AGE_DAYS: ${{ inputs.max_age_days }}

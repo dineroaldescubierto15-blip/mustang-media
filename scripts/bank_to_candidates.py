@@ -19,9 +19,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--day", required=True)
     ap.add_argument("--count", type=int, default=0)
+    ap.add_argument("--force", action="store_true", help="fes servir el banc encara que estigui desactivat")
     args = ap.parse_args()
     config = load_json(CONFIG_FILE, {})
-    if not config.get("use_bank", False):
+    if not config.get("use_bank", False) and not args.force:
         # El banc són reels que ja tenen milions de visualitzacions: Instagram els tracta com a duplicats.
         print("Banc desactivat (use_bank: false): es fa servir la cerca de reels recents")
         return
