@@ -1,0 +1,72 @@
+name: Estudi de TikTok (Mustang)
+
+on:
+  workflow_dispatch:
+    inputs:
+      hashtags:
+        description: "Hashtags separats per comes"
+        default: "fordmustang,mustang,mustanggt,gt500,darkhorse,shelby,s650,foxbody"
+      per_hashtag:
+        description: "Vídeos per hashtag"
+        default: "30"
+      max_usage:
+        description: "No s'executa si l'ús mensual d'Apify ja supera aquests USD"
+        default: "3.5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Comprova el crèdit d'Apify i descarrega vídeos de TikTok
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          D=analysis/tiktok-$(date -u +%Y-%m-%d)
+          echo "D=$D" >> "$GITHUB_ENV"
+          mkdir -p $D
+          export D
+          python - <<'EOF'
+          import json, os, sys, requests
+          tok = os.environ["APIFY_TOKEN"]
+          lim = requests.get("https://api.apify.com/v2/users/me/limits", params={"token": tok}, timeout=60).json()["data"]
+          used = lim["current"].get("monthlyUsageUsd", 0)
+          print("APIFY_USAGE", round(used, 2), "de", lim["limits"].get("maxMonthlyUsageUsd"), "USD")
+          if used > float("${{ inputs.max_usage }}"):
+              sys.exit("Ús d'Apify massa alt: no s'executa l'estudi")
+          tags = [t.strip() for t in "${{ inputs.hashtags }}".split(",") if t.strip()]
+          payload = {"hashtags": tags, "resultsPerPage": int("${{ inputs.per_hashtag }}"),
+                     "shouldDownloadVideos": False, "shouldDownloadCovers": False,
+                     "shouldDownloadSubtitles": False, "shouldDownloadSlideshowImages": False}
+          r = requests.post("https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items",
+                            params={"token": tok}, json=payload, timeout=1500)
+          r.raise_for_status()
+          items = r.json()
+          print(len(items), "vídeos")
+          json.dump(items, open(os.environ["D"] + "/raw.json", "w"), indent=1, default=str)
+          lim = requests.get("https://api.apify.com/v2/users/me/limits", params={"token": tok}, timeout=60).json()["data"]
+          print("APIFY_USAGE_AFTER", round(lim["current"].get("monthlyUsageUsd", 0), 2), "USD")
+          EOF
+      - name: Desa els resultats
+        if: always()
+        run: |
+          git config user.name "mustang-bot"
+          git config user.email "mustang-bot@users.noreply.github.com"
+          git add analysis
+          git diff --cached --quiet && exit 0
+          git commit -m "Estudi de TikTok $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 3; done
