@@ -429,7 +429,8 @@
         "+0.15 muntatge lleuger (4-8 plans)"
       ],
       "media_path": "media/bank/DVEc5QlDzxp.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-28"
     },
     {
       "shortCode": "DAl_Rv9MbXl",
@@ -470,7 +471,8 @@
         "+0.05 text en pantalla"
       ],
       "media_path": "media/bank/DAl_Rv9MbXl.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-28"
     },
     {
       "shortCode": "CmzYyDioI0b",
@@ -518,7 +520,8 @@
         "+0.05 text en pantalla"
       ],
       "media_path": "media/bank/CmzYyDioI0b.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-28"
     },
     {
       "shortCode": "DdbQ3eWtKd_",
@@ -542,7 +545,8 @@
         "+0.05 text en pantalla"
       ],
       "media_path": "media/bank/DdbQ3eWtKd_.mp4",
-      "status": "banked"
+      "status": "sent",
+      "sent_day": "2026-11-28"
     },
     {
       "shortCode": "DDPk8ust6Pu",
